@@ -1,0 +1,41 @@
+import os
+import shutil
+import re
+import requests
+
+# Folder where files will be stored
+BASE_DIR = "reports"
+os.makedirs(BASE_DIR, exist_ok=True)
+
+# Example file URLs (replace with real ones)
+urls = [
+    "https://example.com/sales_report_2024-01.pdf",
+    "https://example.com/sales_report_2024-02.pdf"
+]
+
+for url in urls:
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        filename = url.split("/")[-1]
+
+        # Extract year-month using regex
+        match = re.search(r"(\d{4})-(\d{2})", filename)
+        if match:
+            year, month = match.groups()
+            folder_name = f"{year}_{month}"
+            folder_path = os.path.join(BASE_DIR, folder_name)
+            os.makedirs(folder_path, exist_ok=True)
+
+            # Save file
+            file_path = os.path.join(BASE_DIR, filename)
+            with open(file_path, "wb") as f:
+                f.write(response.content)
+
+            # Move file into its folder
+            shutil.move(file_path, os.path.join(folder_path, filename))
+            print(f"Saved and organized: {filename}")
+        else:
+            print(f"No date found in filename: {filename}")
+    else:
+        print(f"Failed to download: {url}")
